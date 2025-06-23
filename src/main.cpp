@@ -20,6 +20,15 @@ class MyServerCallbacks : public BLEServerCallbacks {
   }
 };
 
+struct DataPack {
+  uint32_t timesstamp;
+  float x_axis;
+  float y_axis;
+  float z_axis;
+  bool is_calibrated;
+};
+
+float value = 0;
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting BLE work!");
@@ -49,19 +58,19 @@ void setup() {
 
 void loop() {
   if (deviceConnected) {
-    uint32_t value = 0;
     for (int i=0; i<10; i++) {
-      uint8_t bytes[4];
-      bytes[0] = (value >> 0) & 0xFF;
-      bytes[1] = (value >> 8) & 0xFF;
-      bytes[2] = (value >> 16) & 0xFF;
-      bytes[3] = (value >> 24) & 0xFF;
+      DataPack my_data;
+      my_data.timesstamp = millis();
+      my_data.x_axis = sin(value/10.0) * 100.0;
+      my_data.y_axis = cos(value/10.0) * 100.0;
+      my_data.z_axis = sin(value/5.0) * 50.0;
+      my_data.is_calibrated = true;
 
-      pCharacteristic->setValue(bytes, 4);
+      pCharacteristic->setValue((uint8_t *)&my_data, sizeof(my_data));
       pCharacteristic->notify();
-      value++;
+      value += 0.1;
     }
-    delay(10);
+    delay(100);
   } else {
     Serial.println("Device is not connected");
     delay(1000);
